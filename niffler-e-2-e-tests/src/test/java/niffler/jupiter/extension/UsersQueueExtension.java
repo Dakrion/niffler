@@ -2,6 +2,7 @@ package niffler.jupiter.extension;
 
 import io.qameta.allure.AllureId;
 import niffler.jupiter.annotation.User;
+import niffler.model.UserJson;
 import niffler.model.UserModel;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
@@ -10,11 +11,13 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Queue;
+import java.lang.reflect.Parameter;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
+
+import static niffler.jupiter.annotation.User.UserType.ADMIN;
+import static niffler.jupiter.annotation.User.UserType.COMMON;
 
 public class UsersQueueExtension implements
         BeforeTestExecutionCallback,
@@ -28,40 +31,42 @@ public class UsersQueueExtension implements
     private static final Queue<UserModel> USER_MODEL_COMMON_QUEUE = new ConcurrentLinkedQueue<>();
 
     static {
-        USER_MODEL_ADMIN_QUEUE.add(new UserModel("dima", "12345"));
+        USER_MODEL_ADMIN_QUEUE.add(new UserModel("Roman", "1234"));
         USER_MODEL_COMMON_QUEUE.add(new UserModel("bill", "12345"));
         USER_MODEL_COMMON_QUEUE.add(new UserModel("test", "test"));
     }
 
     @Override
-    public void beforeTestExecution(ExtensionContext context) throws Exception {
+    public void beforeTestExecution(ExtensionContext context) {
         String id = getTestId(context);
-        User.UserType desiredUserType = Arrays.stream(context.getRequiredTestMethod()
+        List<Parameter> listOfUsers = Arrays.stream(context.getRequiredTestMethod()
                         .getParameters())
                 .filter(p -> p.isAnnotationPresent(User.class))
-                .map(p -> p.getAnnotation(User.class))
-                .findFirst()
-                .orElseThrow()
-                .userType();
+                .toList();
 
-        UserModel user = null;
-        while (user == null) {
-            if (desiredUserType == User.UserType.ADMIN) {
-                user = USER_MODEL_ADMIN_QUEUE.poll();
+        putUsersFromQueueToContext(id, listOfUsers, context);
+    }
+
+    private void putUsersFromQueueToContext(String testId, List<Parameter> params, ExtensionContext context) {
+        params.forEach(el -> {
+            if (el.getAnnotation(User.class).userType() == ADMIN) {
+                UserModel user = USER_MODEL_ADMIN_QUEUE.poll();
+                if (user == null) putUsersFromQueueToContext(testId, params, context);
+                context.getStore(NAMESPACE).put(testId, Map.of(ADMIN, Objects.requireNonNull(user)));
             } else {
-                user = USER_MODEL_COMMON_QUEUE.poll();
+                UserModel user = USER_MODEL_COMMON_QUEUE.poll();
+                if (user == null) putUsersFromQueueToContext(testId, params, context);
+                context.getStore(NAMESPACE).put(testId, Map.of(COMMON, Objects.requireNonNull(user)));
             }
-        }
-        Objects.requireNonNull(user);
-        context.getStore(NAMESPACE).put(id, Map.of(desiredUserType, user));
+        });
     }
 
     @Override
     public void afterTestExecution(ExtensionContext context) throws Exception {
         String id = getTestId(context);
         Map<User.UserType, UserModel> map = context.getStore(NAMESPACE).get(id, Map.class);
-        if (map.containsKey(User.UserType.ADMIN)) {
-            USER_MODEL_ADMIN_QUEUE.add(map.get(User.UserType.ADMIN));
+        if (map.containsKey(ADMIN)) {
+            USER_MODEL_ADMIN_QUEUE.add(map.get(ADMIN));
         } else {
             USER_MODEL_COMMON_QUEUE.add(map.get(User.UserType.COMMON));
         }

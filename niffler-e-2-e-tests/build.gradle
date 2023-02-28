@@ -34,6 +34,7 @@ dependencies {
     testImplementation 'com.codeborne:selenide:6.11.1'
     testImplementation 'com.github.javafaker:javafaker:1.0.2'
     testImplementation 'com.google.code.findbugs:jsr305:3.0.2'
+    testImplementation 'org.assertj:assertj-core:3.24.2'
 }
 
 test {
@@ -42,4 +43,15 @@ test {
         systemProperty("test.env", "local")
     }
     useJUnitPlatform()
+}
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Test) {
+        systemProperty "file.encoding", "UTF-8"
+        compileJava.options.encoding = 'UTF-8'
+        compileTestJava.options.encoding = 'UTF-8'
+    }
 }
