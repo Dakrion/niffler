@@ -15,8 +15,6 @@ public @interface User {
 
     UserType userType() default UserType.COMMON;
 
-//    CreateUserExtension.Selector selector() default CreateUserExtension.Selector.NESTED;
-
     enum UserType {
         ADMIN, COMMON
     }

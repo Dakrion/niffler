@@ -2,23 +2,17 @@ package niffler.jupiter.extension;
 
 import io.qameta.allure.AllureId;
 import niffler.jupiter.annotation.User;
-import niffler.model.UserJson;
 import niffler.model.UserModel;
-import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
-import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
+import org.junit.jupiter.api.extension.*;
 
 import java.lang.reflect.Parameter;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import static niffler.jupiter.annotation.User.UserType.ADMIN;
 import static niffler.jupiter.annotation.User.UserType.COMMON;
 
+@SuppressWarnings("unchecked")
 public class UsersQueueExtension implements
         BeforeTestExecutionCallback,
         AfterTestExecutionCallback,
@@ -32,7 +26,7 @@ public class UsersQueueExtension implements
 
     static {
         USER_MODEL_ADMIN_QUEUE.add(new UserModel("Roman", "1234"));
-        USER_MODEL_COMMON_QUEUE.add(new UserModel("bill", "12345"));
+        USER_MODEL_COMMON_QUEUE.add(new UserModel("Vlad", "1234"));
         USER_MODEL_COMMON_QUEUE.add(new UserModel("test", "test"));
     }
 
@@ -48,27 +42,36 @@ public class UsersQueueExtension implements
     }
 
     private void putUsersFromQueueToContext(String testId, List<Parameter> params, ExtensionContext context) {
+        Map<User.UserType, List<UserModel>> userContainer = new HashMap<>();
+        List<UserModel> adminContainer = new ArrayList<>();
+        List<UserModel> commonContainer = new ArrayList<>();
         params.forEach(el -> {
-            if (el.getAnnotation(User.class).userType() == ADMIN) {
-                UserModel user = USER_MODEL_ADMIN_QUEUE.poll();
-                if (user == null) putUsersFromQueueToContext(testId, params, context);
-                context.getStore(NAMESPACE).put(testId, Map.of(ADMIN, Objects.requireNonNull(user)));
-            } else {
-                UserModel user = USER_MODEL_COMMON_QUEUE.poll();
-                if (user == null) putUsersFromQueueToContext(testId, params, context);
-                context.getStore(NAMESPACE).put(testId, Map.of(COMMON, Objects.requireNonNull(user)));
+            UserModel user = null;
+            while (user == null) {
+                if (el.getAnnotation(User.class).userType() == ADMIN) {
+                    user = USER_MODEL_ADMIN_QUEUE.poll();
+                    if (user != null) adminContainer.add(user);
+                } else {
+                    user = USER_MODEL_COMMON_QUEUE.poll();
+                    if (user != null) commonContainer.add(user);
+                }
             }
         });
+        userContainer.put(ADMIN, adminContainer);
+        userContainer.put(COMMON, commonContainer);
+        context.getStore(NAMESPACE).put(testId, userContainer);
     }
 
     @Override
-    public void afterTestExecution(ExtensionContext context) throws Exception {
+    public void afterTestExecution(ExtensionContext context) {
         String id = getTestId(context);
-        Map<User.UserType, UserModel> map = context.getStore(NAMESPACE).get(id, Map.class);
+        Map<User.UserType, List<UserModel>> map = context.getStore(NAMESPACE).get(id, Map.class);
         if (map.containsKey(ADMIN)) {
-            USER_MODEL_ADMIN_QUEUE.add(map.get(ADMIN));
+            List<UserModel> admins = map.get(ADMIN);
+            USER_MODEL_ADMIN_QUEUE.addAll(admins);
         } else {
-            USER_MODEL_COMMON_QUEUE.add(map.get(User.UserType.COMMON));
+            List<UserModel> commons = map.get(COMMON);
+            USER_MODEL_COMMON_QUEUE.addAll(commons);
         }
     }
 
@@ -87,9 +90,15 @@ public class UsersQueueExtension implements
     @Override
     public UserModel resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
         String id = getTestId(extensionContext);
-        return (UserModel) extensionContext.getStore(NAMESPACE).get(id, Map.class)
-                .values()
-                .iterator()
-                .next();
+        User.UserType userType = parameterContext.getParameter().getAnnotation(User.class).userType();
+        Map<User.UserType, List<UserModel>> context = extensionContext.getStore(NAMESPACE).get(id, Map.class);
+        List<UserModel> users = context.entrySet()
+                .stream()
+                .filter(el -> el.getKey().equals(userType))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow();
+
+        return users.stream().findFirst().orElseThrow();
     }
 }
