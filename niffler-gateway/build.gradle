@@ -28,8 +28,8 @@ dependencies {
 
 docker {
     dependsOn build
-    name "dtuchs/niffler-gateway:${project.version}"
-    tag 'latest', 'dtuchs/niffler-gateway:latest'
+    name "anoshkinri/niffler-gateway:${project.version}"
+    tag 'latest', 'anoshkinri/niffler-gateway:latest'
     files bootJar.archiveFile
     buildArgs([
             APP_VER: project.version

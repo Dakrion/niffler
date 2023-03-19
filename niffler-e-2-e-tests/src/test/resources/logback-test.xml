@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT_PLAIN_TEXT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>-------------------- %d{HH:mm:ss.SSS} %-5level --------------------\n %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="STDOUT_PLAIN_TEXT"/>
+    </root>
+</configuration>

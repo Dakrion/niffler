@@ -18,7 +18,7 @@ import static niffler.data.DataBase.USERDATA;
 public class PostgresJdbcUsersDAO implements UsersDAO {
 
     private static final Logger LOG = LoggerFactory.getLogger(PostgresJdbcUsersDAO.class);
-    private final DataSource ds = DataSourceContext.INSTANCE.getDatatSource(USERDATA);
+    private final DataSource ds = DataSourceContext.INSTANCE.getDataSource(USERDATA);
 
     @Override
     public int addUser(UsersEntity users) {
