@@ -9,9 +9,9 @@ public interface Config {
     String PROJECT_NAME = "niffler";
 
     static Config getConfig() {
-        if ("docker".equals(System.getProperty("test.env"))) {
+        if ("docker".equals(System.getenv("env"))) {
             return new DockerConfig();
-        } else if ("local".equals(System.getProperty("test.env"))) {
+        } else if ("local".equals(System.getenv("env"))) {
             return new LocalConfig();
         } else {
             throw new IllegalStateException();

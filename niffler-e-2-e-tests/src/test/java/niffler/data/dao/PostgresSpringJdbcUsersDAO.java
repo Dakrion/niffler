@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.Set;
+
 import static niffler.data.DataBase.USERDATA;
 
 public class PostgresSpringJdbcUsersDAO implements UsersDAO {
@@ -47,5 +49,10 @@ public class PostgresSpringJdbcUsersDAO implements UsersDAO {
                 new UsersRowMapper(),
                 username
         );
+    }
+
+    @Override
+    public Set<UsersEntity> getFriends(String username) {
+        return null;
     }
 }

@@ -5,6 +5,8 @@ import niffler.data.entity.UsersEntity;
 import niffler.data.jpa.EmfContext;
 import niffler.data.jpa.JpaService;
 
+import java.util.Set;
+
 public class PostgresHibernateUsersDAO extends JpaService implements UsersDAO {
     public PostgresHibernateUsersDAO() {
         super(EmfContext.INSTANCE.getEmf(DataBase.USERDATA).createEntityManager());
@@ -31,5 +33,12 @@ public class PostgresHibernateUsersDAO extends JpaService implements UsersDAO {
         return em.createQuery("select u from UsersEntity u where u.username=:username", UsersEntity.class)
                 .setParameter("username", username)
                 .getSingleResult();
+    }
+
+    @Override
+    public Set<UsersEntity> getFriends(String username) {
+        return em.createQuery("select u from UsersEntity u where u.username=:username", UsersEntity.class)
+                .setParameter("username", username)
+                .getSingleResult().getFriends();
     }
 }

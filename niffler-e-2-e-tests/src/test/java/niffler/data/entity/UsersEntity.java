@@ -1,18 +1,9 @@
 package niffler.data.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import niffler.model.CurrencyValues;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "users", schema = "public", catalog = "niffler-userdata")
@@ -36,6 +27,17 @@ public class UsersEntity {
 
     @Column(name = "photo")
     private byte[] photo;
+
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "friends",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id"))
+    private final Set<UsersEntity> friends = new HashSet<>();
+
+    public void addFriends(UsersEntity... friends) {
+        this.friends.addAll(Arrays.asList(friends));
+    }
 
     public UUID getId() {
         return id;
@@ -85,6 +87,10 @@ public class UsersEntity {
         this.photo = photo;
     }
 
+    public Set<UsersEntity> getFriends() {
+        return friends;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -98,5 +104,17 @@ public class UsersEntity {
         int result = Objects.hash(id, username, currency, firstname, surname);
         result = 31 * result + Arrays.hashCode(photo);
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "UsersEntity{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", currency=" + currency +
+                ", firstname='" + firstname + '\'' +
+                ", surname='" + surname + '\'' +
+                ", photo=" + Arrays.toString(photo) +
+                '}';
     }
 }

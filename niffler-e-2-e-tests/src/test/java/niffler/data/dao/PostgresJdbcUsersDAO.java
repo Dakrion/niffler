@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Set;
 import java.util.UUID;
 
 import static niffler.data.DataBase.USERDATA;
@@ -80,5 +81,10 @@ public class PostgresJdbcUsersDAO implements UsersDAO {
             LOG.error("Error while database operation", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Set<UsersEntity> getFriends(String username) {
+        return null;
     }
 }
