@@ -12,6 +12,7 @@ import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
+import static niffler.condition.spend.PhotoCondition.photo;
 
 public class ProfilePage extends BasePage<ProfilePage> {
 
@@ -101,5 +102,17 @@ public class ProfilePage extends BasePage<ProfilePage> {
     public ProfilePage waitForPageLoaded() {
         userName.should(visible);
         return this;
+    }
+
+    @Step("Update avatar with img: {avatarPath}")
+    public ProfilePage updateAvatar(String avatarPath) {
+        $(".profile__avatar").click();
+        $(".edit-avatar__input[type=file]").uploadFromClasspath(avatarPath);
+        return this;
+    }
+
+    @Step("Check photo")
+    public void checkPhoto(String photoPath) {
+        $(".profile__avatar").shouldHave(photo(photoPath));
     }
 }

@@ -74,3 +74,15 @@ test {
     }
     useJUnitPlatform()
 }
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+    tasks.withType(Test).tap {
+        configureEach {
+            systemProperty "file.encoding", "UTF-8"
+            compileJava.options.encoding = 'UTF-8'
+            compileTestJava.options.encoding = 'UTF-8'
+        }
+    }
+}

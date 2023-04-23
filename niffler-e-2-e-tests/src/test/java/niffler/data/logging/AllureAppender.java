@@ -16,6 +16,8 @@ public class AllureAppender extends StdoutLogger {
     private final AttachmentProcessor<AttachmentData> processor = new DefaultAttachmentProcessor();
     private final String sqlTemplatePath = "sql-query.ftl";
 
+    private final String cookieTemplatePath = "cookie.ftl";
+
     @Override
     public void logSQL(int connectionId, String now, long elapsed, Category category,
                        String prepared, String sql, String url) {
@@ -27,6 +29,10 @@ public class AllureAppender extends StdoutLogger {
                     SqlFormatter.of(Dialect.StandardSql).format(sql));
             processor.addAttachment(attachment, new FreemarkerAttachmentRenderer(sqlTemplatePath));
         }
+    }
+
+    public void logCookie(ReceivedCookieAttachment attachment) {
+        processor.addAttachment(attachment, new FreemarkerAttachmentRenderer(cookieTemplatePath));
     }
 
     @Override

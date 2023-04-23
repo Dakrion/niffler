@@ -105,4 +105,20 @@ public class ProfileTest extends BaseWebTest {
                 .addCategory(newCategory)
                 .checkToasterMessage(CAN_NOT_ADD_CATEGORY.content);
     }
+
+    @Test
+    @AllureId("500008")
+    @DisplayName("WEB: Пользователь имеет возможность обновить аватар")
+    @Tag("WEB")
+    @ApiLogin(nifflerUser = @GenerateUser)
+    void photoShouldBeUpdateProfile(@User UserJson user) {
+        String path = "images.jpg";
+        ProfilePage profilePage = Selenide.open(ProfilePage.URL, ProfilePage.class)
+                .waitForPageLoaded()
+                .updateAvatar(path)
+                .submitProfile();
+        Selenide.refresh();
+
+        profilePage.checkPhoto(path);
+    }
 }
